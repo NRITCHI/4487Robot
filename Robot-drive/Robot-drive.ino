@@ -22,6 +22,7 @@ void setMotor(int dir, int pwm, int in1, int in2);
 void ARDUINO_ISR_ATTR encoderISR(void* arg);
 void onDataRecv(const uint8_t *mac_addr, const uint8_t *incomingData, int len);
 void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
+long degreesToDutyCycle(int deg);
 
 // Control data packet structure
 struct ControlDataPacket {
@@ -65,6 +66,10 @@ const float kp = 1.5;                                 // proportional gain for P
 const float ki = 0.2;                                 // integral gain for PID
 const float kd = 0.8;                                 // derivative gain for PID
 const int cTCSLED = 23;                               // GPIO pin for LED on TCS34725
+const int ci_ServoPin1 = 39;                          // GPIO pin for servo 1
+const int ci_ServoPin2 = 36;                          // GPIO pin for servo 2
+const int ci_ServoChannel1 = 8;                       // PWM channel for servo motor
+const int ci_ServoChannel2 = 9;                       // PWM channel for servo motor 2
 
 // Variables
 unsigned long lastHeartbeat = 0;                      // time of last heartbeat state change
@@ -77,6 +82,7 @@ long lastEncoder[] = {0, 0};                          // encoder count at last c
 float targetF[] = {0.0, 0.0};                         // target for motor as float
 ControlDataPacket inData;                             // control data packet from controller
 DriveDataPacket driveData;                            // data packet to send controller
+int i_ServoPos;
 
 // REPLACE WITH MAC ADDRESS OF YOUR CONTROLLER ESP32
 uint8_t receiverMacAddress[] = {0x78,0xE3,0x6D,0x65,0x32,0x6C};  // MAC address of controller 00:01:02:03:04:05 
@@ -96,6 +102,10 @@ void setup() {
   pinMode(cHeartbeatLED, OUTPUT);                     // configure built-in LED for heartbeat
   pinMode(cStatusLED, OUTPUT);                        // configure GPIO for communication status LED as output
   pinMode(cTCSLED, OUTPUT);                           // configure GPIO for control of LED on TCS34725
+  ledcAttachPin(ci_ServoPin1, ci_ServoChannel1);        // assign servo pin to servo channel
+  ledcAttachPin(ci_ServoPin2, ci_ServoChannel2);        // assign servo pin to servo channel
+  ledcSetup(ci_ServoChannel1, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+  ledcSetup(ci_ServoChannel2, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
 
  
   // setup motors with encoders
@@ -169,6 +179,8 @@ void loop() {
   int dir[] = {1, 1};                                 // direction that motor should turn
   uint16_t r, g, b, c;                                // RGBC values from TCS34725
 
+  ledcWrite(ci_ServoChannel1, degreesToDutyCycle(180));  // set servo position
+  ledcWrite(ci_ServoChannel2, degreesToDutyCycle(180));  // set servo position
   
   // if too many sequential packets have dropped, assume loss of controller, restart as safety measure
    if (commsLossCount > cMaxDroppedPackets) {
@@ -352,4 +364,11 @@ void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   else {
     commsLossCount = 0;                               // reset communication loss counter
   }
+}
+
+long degreesToDutyCycle(int deg) {
+  const long cl_MinDutyCycle = 1650;                 // duty cycle for 0 degrees
+  const long cl_MaxDutyCycle = 8175;                 // duty cycle for 180 degrees
+
+  long l_DutyCycle = map(deg, 0, 180, cl_MinDutyCycle, cl_MaxDutyCycle);  // convert to duty cycle
 }
