@@ -196,6 +196,7 @@ void loop() {
       driveData.detected = false;
     }
     printf("%d, %d, %d, %d, %d\n", r,g,b,driveData.detected);
+  
   unsigned long curTime = micros();                   // capture current time in microseconds
   if (curTime - lastTime > 10000) {                   // wait ~10 ms
     deltaT = ((float) (curTime - lastTime)) / 1.0e6;  // compute actual time interval in seconds
@@ -209,38 +210,41 @@ void loop() {
 
       // update target for set direction
 
+      if (k == 0 || k == 1) {
+        if (inData.dir == 1 || inData.dir == -1){             // if forward or reverse button pressed
+          posChange[k] = (float) (inData.dir * inData.speed); // update with controller speed value
 
-      if (inData.dir == 1 || inData.dir == -1){                                  // if forward or reverse button pressed
-        posChange[k] = (float) (inData.dir * inData.speed); // update with controller speed value
+          if (inData.turn == -1){                             // if left turn button pressed
+            posChange[0] = 0;                                   // turn off right motor to turn left
+          }
+          else if (inData.turn == 1){                         // if right turn button pressed
+            posChange[1] = 0;                                  // turn off left motor to turn right
+          }
+        
+        } else{                                               // if forward or reverse button not pressed
+          if (inData.turn == -1){                             // if left turn button pressed
+            posChange[0] = (float) (-1 * inData.speed); // update with controller speed value
+            posChange[1] = (float) (1 * inData.speed); // update with controller speed value
+          }
+          else if (inData.turn == 1){                         // if right turn button pressed
+            posChange[0] = (float) (1 * inData.speed); // update with controller speed value
+            posChange[1] = (float) (-1 * inData.speed); // update with controller speed value
+          }
+        }
+          targetF[k] = targetF[k] + posChange[k];         // set new target position
+      
+        if (k == 0) {                                   // assume differential drive
+          target[k] = (long) targetF[k];                // motor 1 spins one way
+        }
+        else {
+          target[k] = (long) -targetF[k];               // motor 2 spins in opposite direction
+        }
+      }
 
-        if (inData.turn == -1){                             // if left turn button pressed
-          posChange[0] = 0;                                   // turn off right motor to turn left
-        }
-        else if (inData.turn == 1){                         // if right turn button pressed
-          posChange[1] = 0;                                  // turn off left motor to turn right
-        }
-      
-      } else{                                               // if forward or reverse button not pressed
-        if (inData.turn == -1){                             // if left turn button pressed
-          posChange[0] = (float) (-1 * inData.speed); // update with controller speed value
-          posChange[1] = (float) (1 * inData.speed); // update with controller speed value
-        }
-        else if (inData.turn == 1){                         // if right turn button pressed
-          posChange[0] = (float) (1 * inData.speed); // update with controller speed value
-          posChange[1] = (float) (-1 * inData.speed); // update with controller speed value
-        }
-      }
-        targetF[k] = targetF[k] + posChange[k];         // set new target position
-    
-      if (k == 0) {                                   // assume differential drive
-        target[k] = (long) targetF[k];                // motor 1 spins one way
-      }
-      else {
-        target[k] = (long) -targetF[k];               // motor 2 spins in opposite direction
-      }
-      
       if (k == 2 || k == 3) {
         posChange[k] = (float) (1 * 10);              // motors 3 and 4 running at a constant speed
+        targetF[k] = targetF[k] + posChange[k];         // set new target position
+        target[k] = (long) targetF[k];                // motor 1 spins one way
       }
 
       // use PID to calculate control signal to motor
