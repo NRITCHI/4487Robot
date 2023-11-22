@@ -48,11 +48,11 @@ struct Encoder {
 const int cHeartbeatLED = 2;                          // GPIO pin of built-in LED for heartbeat
 const int cStatusLED = 27;                            // GPIO pin of communication status LED
 const int cHeartbeatInterval = 500;                   // heartbeat blink interval, in milliseconds
-const int cNumMotors = 2;                             // Number of DC motors
-const int cIN1Pin[] = {17, 19};                       // GPIO pin(s) for INT1
-const int cIN1Chan[] = {0, 1};                        // PWM channe(s) for INT1
-const int c2IN2Pin[] = {16, 18};                      // GPIO pin(s) for INT2
-const int cIN2Chan[] = {2, 3};                        // PWM channel(s) for INT2
+const int cNumMotors = 4;                             // Number of DC motors
+const int cIN1Pin[] = {17, 19, 4, 2};                       // GPIO pin(s) for INT1
+const int cIN1Chan[] = {0, 1, 2, 3};                        // PWM channel(s) for INT1
+const int c2IN2Pin[] = {16, 18, 5, 15};                      // GPIO pin(s) for INT2
+const int cIN2Chan[] = {4, 5, 6, 7};                        // PWM channel(s) for INT2
 const int cPWMRes = 8;                                // bit resolution for PWM
 const int cMinPWM = 0;                                // PWM value for minimum speed that turns motor
 const int cMaxPWM = pow(2, cPWMRes) - 1;              // PWM value for maximum speed
@@ -71,10 +71,12 @@ unsigned long lastHeartbeat = 0;                      // time of last heartbeat 
 unsigned long lastTime = 0;                           // last time of motor control was updated
 unsigned int commsLossCount = 0;                      // number of sequential sent packets have dropped
 Encoder encoder[] = {{25, 26, 0},                     // encoder 0 on GPIO 25 and 26, 0 position
-                     {32, 33, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
-long target[] = {0, 0};                               // target encoder count for motor
-long lastEncoder[] = {0, 0};                          // encoder count at last control cycle
-float targetF[] = {0.0, 0.0};                         // target for motor as float
+                     {32, 33, 0},
+                     {34, 35, 0},
+                     {14, 12, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
+long target[] = {0, 0, 0, 0};                               // target encoder count for motor
+long lastEncoder[] = {0, 0, 0, 0};                          // encoder count at last control cycle
+float targetF[] = {0.0, 0.0, 0.0, 0.0};                         // target for motor as float
 ControlDataPacket inData;                             // control data packet from controller
 DriveDataPacket driveData;                            // data packet to send controller
 
@@ -156,17 +158,17 @@ void setup() {
 
 void loop() {
   float deltaT = 0;                                   // time interval
-  long pos[] = {0, 0};                                // current motor positions
-  float velEncoder[] = {0, 0};                        // motor velocity in counts/sec
-  float velMotor[] = {0, 0};                          // motor shaft velocity in rpm
-  float posChange[] = {0, 0};                         // change in position for set speed
-  long e[] = {0, 0};                                  // position error
-  float ePrev[] = {0, 0};                             // previous position error
-  float dedt[] = {0, 0};                              // rate of change of position error (de/dt)
-  float eIntegral[] = {0, 0};                         // integral of error 
-  float u[] = {0, 0};                                 // PID control signal
-  int pwm[] = {0, 0};                                 // motor speed(s), represented in bit resolution
-  int dir[] = {1, 1};                                 // direction that motor should turn
+  long pos[] = {0, 0, 0, 0};                                // current motor positions
+  float velEncoder[] = {0, 0, 0, 0};                        // motor velocity in counts/sec
+  float velMotor[] = {0, 0, 0, 0};                          // motor shaft velocity in rpm
+  float posChange[] = {0, 0, 0, 0};                         // change in position for set speed
+  long e[] = {0, 0, 0, 0};                                  // position error
+  float ePrev[] = {0, 0, 0, 0};                             // previous position error
+  float dedt[] = {0, 0, 0, 0};                              // rate of change of position error (de/dt)
+  float eIntegral[] = {0, 0, 0, 0};                         // integral of error 
+  float u[] = {0, 0, 0, 0};                                 // PID control signal
+  int pwm[] = {0, 0, 0, 0};                                 // motor speed(s), represented in bit resolution
+  int dir[] = {1, 1, 1, 1};                                 // direction that motor should turn
   uint16_t r, g, b, c;                                // RGBC values from TCS34725
 
   
@@ -235,6 +237,10 @@ void loop() {
       }
       else {
         target[k] = (long) -targetF[k];               // motor 2 spins in opposite direction
+      }
+      
+      if (k == 2 || k == 3) {
+        posChange[k] = (float) (1 * 10);              // motors 3 and 4 running at a constant speed
       }
 
       // use PID to calculate control signal to motor
