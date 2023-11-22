@@ -66,7 +66,7 @@ const float kp = 1.5;                                 // proportional gain for P
 const float ki = 0.2;                                 // integral gain for PID
 const float kd = 0.8;                                 // derivative gain for PID
 const int cTCSLED = 23;                               // GPIO pin for LED on TCS34725
-const int ci_ServoPin1 = 39;                          // GPIO pin for servo 1
+const int ci_ServoPin1 = 13;                          // GPIO pin for servo 1
 const int ci_ServoPin2 = 36;                          // GPIO pin for servo 2
 const int ci_ServoChannel1 = 8;                       // PWM channel for servo motor
 const int ci_ServoChannel2 = 9;                       // PWM channel for servo motor 2
@@ -106,7 +106,7 @@ void setup() {
   ledcAttachPin(ci_ServoPin2, ci_ServoChannel2);        // assign servo pin to servo channel
   ledcSetup(ci_ServoChannel1, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
   ledcSetup(ci_ServoChannel2, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
-
+  
  
   // setup motors with encoders
   for (int k = 0; k < cNumMotors; k++) {
@@ -181,6 +181,7 @@ void loop() {
 
   ledcWrite(ci_ServoChannel1, degreesToDutyCycle(180));  // set servo position
   ledcWrite(ci_ServoChannel2, degreesToDutyCycle(180));  // set servo position
+
   
   // if too many sequential packets have dropped, assume loss of controller, restart as safety measure
    if (commsLossCount > cMaxDroppedPackets) {
