@@ -1,9 +1,9 @@
 // 
-// MME 4487 Lab 5 Controller
+// MME 4487 Final Project Control System
 // 
 //  Language: Arduino (C++)
 //  Target:   ESP32
-//  Author:   Michael Naish
+//  Author:   Blake Nielsen, Nathan Ritchie, Peter Guatto, Hamza Faish
 //  Date:     2023 10 08 
 //
 
