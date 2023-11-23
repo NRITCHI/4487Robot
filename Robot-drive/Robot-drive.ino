@@ -88,6 +88,10 @@ float targetF[] = {0.0, 0.0};                         // target for motor as flo
 ControlDataPacket inData;                             // control data packet from controller
 DriveDataPacket driveData;                            // data packet to send controller
 
+int curCheck;
+int prevCheck;
+int position = 0;
+
 // REPLACE WITH MAC ADDRESS OF YOUR CONTROLLER ESP32
 uint8_t receiverMacAddress[] = {0x78,0xE3,0x6D,0x65,0x32,0x6C};  // MAC address of controller 00:01:02:03:04:05 
 esp_now_peer_info_t peerInfo = {};                    // ESP-NOW peer information
@@ -189,7 +193,7 @@ void loop() {
   int dir[] = {1, 1};                                 // direction that motor should turn
   uint16_t r, g, b, c;                                // RGBC values from TCS34725
 
-  Serial.println("looped");
+  //Serial.println("looped");
   // if too many sequential packets have dropped, assume loss of controller, restart as safety measure
   // if (commsLossCount > cMaxDroppedPackets) {
     //delay(1000);                                      // okay to block here as nothing else should be happening
@@ -206,7 +210,7 @@ void loop() {
   //Object colour detection
    if (tcsFlag) {                                      // if colour sensor initialized
     tcs.getRawData(&r, &g, &b, &c);                   // get raw RGBC values
-    Serial.println("colour");
+    //Serial.println("colour");
    }
   
     if (r >= 10 && g >= 40 && b >= 10 && c >= 20){
@@ -214,12 +218,42 @@ void loop() {
     } else{
       driveData.detected = false;
     }
+  Serial.print("r ");
+  Serial.print(r);
+  Serial.print(" g ");
+  Serial.print(g);
+  Serial.print(" b ");
+  Serial.print(b);
+  Serial.print(" c ");
+  Serial.println(c);
 
-
-  if (r >= 10 && g >= 40 && b >= 10 && c >= 20){
-      driveData.detected = true;
-  } else{
-    driveData.detected = false;
+  // changes servo position depending on colour
+  if (position = 0) {
+    if (r <= 3 && b <= 5 g <= 5 && c <= 10) {                    // check if black
+      Serial.println("black");
+    } else if (r <= 3 && b <= 5 g <= 5 && c <= 10) {            // check if blue
+      position = 1;                                             // change to position 1
+      curCheck = millis()                                      // update timer
+      Serial.println("blue");
+    } else {
+      position = 2;                                               // check if white
+      Serial.println("white");                                   //change position
+    }
+  }
+  
+  if (position == 0) {
+    ledcWrite(ci_ServoChannel1, degreesToDutyCycle(87));               // keep at home position
+  } else if (position == 1) {
+    if ((millis() - curCheck) > 500) {                             // if position 1 and after delay, change position
+      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(0));
+      position = 0;                                                 // reset
+    }
+  } else {
+    if ((millis() - curCheck) > 500) {                                 // if position 2 and after delay, change position
+      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(150));
+      position = 0;                                                      // reset
+    }
+    
   }
   
   
