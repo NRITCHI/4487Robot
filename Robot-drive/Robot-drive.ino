@@ -210,7 +210,7 @@ void loop() {
     lastTime = curTime;                               // update start time for next control cycle
     driveData.time = curTime;                         // update transmission time
 
-    analogWrite(diskIN1, 200);
+    analogWrite(diskIN1, 170);
     digitalWrite(diskIN2, LOW);
 
     for (int k = 0; k < cNumMotors; k++) {
