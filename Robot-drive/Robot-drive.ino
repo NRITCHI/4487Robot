@@ -22,6 +22,7 @@ void setMotor(int dir, int pwm, int in1, int in2);
 void ARDUINO_ISR_ATTR encoderISR(void* arg);
 void onDataRecv(const uint8_t *mac_addr, const uint8_t *incomingData, int len);
 void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
+long degreesToDutyCycle(int deg);
 
 // Control data packet structure
 struct ControlDataPacket {
@@ -69,6 +70,11 @@ const int diskIN1 = 13;
 const int diskIN2 = 27;
 //const int fanIN1 = 4;
 //const int fanIN2 = 13;
+const int ci_ServoPin1 = 4;                          // GPIO pin for servo 1
+const int ci_ServoPin2 = 1;                          // GPIO pin for servo 2
+const int ci_ServoChannel1 = 8;                       // PWM channel for servo motor
+const int ci_ServoChannel2 = 9;                       // PWM channel for servo motor 2
+
 
 // Variables
 unsigned long lastHeartbeat = 0;                      // time of last heartbeat state change
@@ -117,6 +123,11 @@ void setup() {
   pinMode(diskIN1, OUTPUT);
   pinMode(diskIN2, OUTPUT);
 
+  ledcAttachPin(ci_ServoPin1, ci_ServoChannel1);        // assign servo pin to servo channel
+  ledcAttachPin(ci_ServoPin2, ci_ServoChannel2);        // assign servo pin to servo channel
+  ledcSetup(ci_ServoChannel1, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+  ledcSetup(ci_ServoChannel2, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+  
 
   // Initialize ESP-NOW
   if (esp_now_init() != ESP_OK) 
@@ -177,7 +188,7 @@ void loop() {
   int dir[] = {1, 1};                                 // direction that motor should turn
   uint16_t r, g, b, c;                                // RGBC values from TCS34725
 
-  
+  Serial.println("looped");
   // if too many sequential packets have dropped, assume loss of controller, restart as safety measure
   // if (commsLossCount > cMaxDroppedPackets) {
     //delay(1000);                                      // okay to block here as nothing else should be happening
@@ -194,6 +205,7 @@ void loop() {
   //Object colour detection
    if (tcsFlag) {                                      // if colour sensor initialized
     tcs.getRawData(&r, &g, &b, &c);                   // get raw RGBC values
+    Serial.println("colour");
    }
   
     if (r >= 10 && g >= 40 && b >= 10 && c >= 20){
@@ -210,7 +222,7 @@ void loop() {
     lastTime = curTime;                               // update start time for next control cycle
     driveData.time = curTime;                         // update transmission time
 
-    analogWrite(diskIN1, 170);
+    analogWrite(diskIN1, 220);
     digitalWrite(diskIN2, LOW);
 
     for (int k = 0; k < cNumMotors; k++) {
@@ -369,4 +381,12 @@ void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   else {
     commsLossCount = 0;                               // reset communication loss counter
   }
+}
+
+long degreesToDutyCycle(int deg) {
+  const long cl_MinDutyCycle = 1650;                 // duty cycle for 0 degrees
+  const long cl_MaxDutyCycle = 8175;                 // duty cycle for 180 degrees
+
+  long l_DutyCycle = map(deg, 0, 180, cl_MinDutyCycle, cl_MaxDutyCycle);  // convert to duty cycle
+  return l_DutyCycle;
 }
