@@ -49,9 +49,9 @@ const int cHeartbeatLED = 2;                          // GPIO pin of built-in LE
 ///const int cStatusLED = 27;                            // GPIO pin of communication status LED
 const int cHeartbeatInterval = 500;                   // heartbeat blink interval, in milliseconds
 const int cNumMotors = 4;                             // Number of DC motors
-const int cIN1Pin[] = {17, 19, 4, 2};                       // GPIO pin(s) for INT1
+const int cIN1Pin[] = {17, 19, 4, 22};                       // GPIO pin(s) for INT1
 const int cIN1Chan[] = {0, 1, 2, 3};                        // PWM channel(s) for INT1
-const int c2IN2Pin[] = {16, 18, 5, 15};                      // GPIO pin(s) for INT2
+const int c2IN2Pin[] = {16, 18, 23, 21};                      // GPIO pin(s) for INT2
 const int cIN2Chan[] = {4, 5, 6, 7};                        // PWM channel(s) for INT2
 const int cPWMRes = 8;                                // bit resolution for PWM
 const int cMinPWM = 0;                                // PWM value for minimum speed that turns motor
@@ -72,8 +72,8 @@ unsigned long lastTime = 0;                           // last time of motor cont
 unsigned int commsLossCount = 0;                      // number of sequential sent packets have dropped
 Encoder encoder[] = {{25, 26, 0},                     // encoder 0 on GPIO 25 and 26, 0 position
                      {32, 33, 0},
-                     {14, 12, 0},
-                     {27, 13, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
+                     {27, 14, 0},
+                     {5, 13, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
 long target[] = {0, 0, 0, 0};                               // target encoder count for motor
 long lastEncoder[] = {0, 0, 0, 0};                          // encoder count at last control cycle
 float targetF[] = {0.0, 0.0, 0.0, 0.0};                         // target for motor as float
@@ -240,10 +240,8 @@ void loop() {
           target[k] = (long) -targetF[k];               // motor 2 spins in opposite direction
         }
       }
-      Serial.println(k);
 
       if (k == 2 || k == 3) {
-        Serial.println("entered");
         posChange[k] = (float) (1 * 13);              // motors 3 and 4 running at a constant speed
         targetF[k] = targetF[k] + posChange[k];         // set new target position
         target[k] = (long) targetF[k];                // motor 1 spins one way
@@ -274,6 +272,7 @@ void loop() {
       else {
         setMotor(0, 0, cIN1Chan[k], cIN2Chan[k]);     // stop motor
       }
+      setMotor(dir[k], pwm[k], cIN1Chan[k], cIN2Chan[k]);
 #ifdef SERIAL_STUDIO
       if (k == 0) {
         printf("/*");                                 // start of sequence for Serial Studio parsing
