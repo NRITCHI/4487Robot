@@ -218,6 +218,7 @@ void loop() {
     } else{
       driveData.detected = false;
     }
+
   Serial.print("r ");
   Serial.print(r);
   Serial.print(" g ");
@@ -227,16 +228,27 @@ void loop() {
   Serial.print(" c ");
   Serial.println(c);
 
+  Serial.println(position);
+  if (position == 4) {
+    if ((millis() - curCheck) > 500 && (millis() - curCheck) < 1000) {                             // if position 1 and after delay, change position
+      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(87));                                    // change timing
+    } else if ((millis() - curCheck) > 1000) {
+      position = 0;
+      curCheck = millis();                                                 // reset
+    }
+  }
   // changes servo position depending on colour
-  if (position = 0) {
-    if (r <= 3 && b <= 5 g <= 5 && c <= 10) {                    // check if black
+  
+  if (position == 0) {
+    if (r <= 3 && b <= 5 && g <= 5 && c <= 10) {                    // check if black
       Serial.println("black");
-    } else if (r <= 3 && b <= 5 g <= 5 && c <= 10) {            // check if blue
+    } else if (r <= 3 && b <= 5 && g <= 5 && c <= 10) {            // check if blue
       position = 1;                                             // change to position 1
-      curCheck = millis()                                      // update timer
+      curCheck = millis();                                      // update timer
       Serial.println("blue");
     } else {
       position = 2;                                               // check if white
+      curCheck = millis();
       Serial.println("white");                                   //change position
     }
   }
@@ -244,14 +256,16 @@ void loop() {
   if (position == 0) {
     ledcWrite(ci_ServoChannel1, degreesToDutyCycle(87));               // keep at home position
   } else if (position == 1) {
-    if ((millis() - curCheck) > 500) {                             // if position 1 and after delay, change position
+    if ((millis() - curCheck) > 1000) {                             // if position 1 and after delay, change position
       ledcWrite(ci_ServoChannel1, degreesToDutyCycle(0));
-      position = 0;                                                 // reset
+      position = 4;
+      curCheck = millis();                                                 // reset
     }
-  } else {
-    if ((millis() - curCheck) > 500) {                                 // if position 2 and after delay, change position
+  } else if (position == 2) {
+    if ((millis() - curCheck) > 1000) {                                 // if position 2 and after delay, change position
       ledcWrite(ci_ServoChannel1, degreesToDutyCycle(150));
-      position = 0;                                                      // reset
+      position = 4;
+      curCheck = millis();                                                      // reset
     }
     
   }
