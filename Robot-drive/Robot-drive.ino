@@ -372,4 +372,5 @@ long degreesToDutyCycle(int deg) {
   const long cl_MaxDutyCycle = 8175;                 // duty cycle for 180 degrees
 
   long l_DutyCycle = map(deg, 0, 180, cl_MinDutyCycle, cl_MaxDutyCycle);  // convert to duty cycle
+  return l_DutyCycle;
 }
