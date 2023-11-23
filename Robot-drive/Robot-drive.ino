@@ -4,7 +4,7 @@
 //  Language: Arduino (C++)
 //  Target:   ESP32
 //  Author:   Blake Nielsen, Nathan Ritchie, Peter Guatto, Hamza Faish
-//  Date:     2023 10 08 
+//  Date:     2023 11 23 
 //
 
 // #define SERIAL_STUDIO                                 // print formatted string, that can be captured and parsed by Serial-Studio
@@ -48,11 +48,11 @@ struct Encoder {
 const int cHeartbeatLED = 2;                          // GPIO pin of built-in LED for heartbeat
 ///const int cStatusLED = 27;                            // GPIO pin of communication status LED
 const int cHeartbeatInterval = 500;                   // heartbeat blink interval, in milliseconds
-const int cNumMotors = 4;                             // Number of DC motors
-const int cIN1Pin[] = {17, 19, 4, 22};                       // GPIO pin(s) for INT1
-const int cIN1Chan[] = {0, 1, 2, 3};                        // PWM channel(s) for INT1
-const int c2IN2Pin[] = {16, 18, 23, 21};                      // GPIO pin(s) for INT2
-const int cIN2Chan[] = {4, 5, 6, 7};                        // PWM channel(s) for INT2
+const int cNumMotors = 2;                             // Number of DC motors
+const int cIN1Pin[] = {17, 19};                       // GPIO pin(s) for INT1
+const int cIN1Chan[] = {0, 1};                        // PWM channel(s) for INT1
+const int c2IN2Pin[] = {16, 18};                      // GPIO pin(s) for INT2
+const int cIN2Chan[] = {2, 3};                        // PWM channel(s) for INT2
 const int cPWMRes = 8;                                // bit resolution for PWM
 const int cMinPWM = 0;                                // PWM value for minimum speed that turns motor
 const int cMaxPWM = pow(2, cPWMRes) - 1;              // PWM value for maximum speed
@@ -65,18 +65,20 @@ const float kp = 1.5;                                 // proportional gain for P
 const float ki = 0.2;                                 // integral gain for PID
 const float kd = 0.8;                                 // derivative gain for PID
 const int cTCSLED = 23;                               // GPIO pin for LED on TCS34725
+const int diskIN1 = 13;
+const int diskIN2 = 27;
+//const int fanIN1 = 4;
+//const int fanIN2 = 13;
 
 // Variables
 unsigned long lastHeartbeat = 0;                      // time of last heartbeat state change
 unsigned long lastTime = 0;                           // last time of motor control was updated
 unsigned int commsLossCount = 0;                      // number of sequential sent packets have dropped
 Encoder encoder[] = {{25, 26, 0},                     // encoder 0 on GPIO 25 and 26, 0 position
-                     {32, 33, 0},
-                     {27, 14, 0},
-                     {5, 13, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
-long target[] = {0, 0, 0, 0};                               // target encoder count for motor
-long lastEncoder[] = {0, 0, 0, 0};                          // encoder count at last control cycle
-float targetF[] = {0.0, 0.0, 0.0, 0.0};                         // target for motor as float
+                     {32, 33, 0},};                    // encoder 1 on GPIO 32 and 33, 0 position
+long target[] = {0, 0};                               // target encoder count for motor
+long lastEncoder[] = {0, 0};                          // encoder count at last control cycle
+float targetF[] = {0.0, 0.0};                         // target for motor as float
 ControlDataPacket inData;                             // control data packet from controller
 DriveDataPacket driveData;                            // data packet to send controller
 
@@ -111,6 +113,10 @@ void setup() {
     // configure encoder to trigger interrupt with each rising edge on channel A
     attachInterruptArg(encoder[k].chanA, encoderISR, &encoder[k], RISING);
   }
+
+  pinMode(diskIN1, OUTPUT);
+  pinMode(diskIN2, OUTPUT);
+
 
   // Initialize ESP-NOW
   if (esp_now_init() != ESP_OK) 
@@ -158,17 +164,17 @@ void setup() {
 
 void loop() {
   float deltaT = 0;                                   // time interval
-  long pos[] = {0, 0, 0, 0};                                // current motor positions
-  float velEncoder[] = {0, 0, 0, 0};                        // motor velocity in counts/sec
-  float velMotor[] = {0, 0, 0, 0};                          // motor shaft velocity in rpm
-  float posChange[] = {0, 0, 0, 0};                         // change in position for set speed
-  long e[] = {0, 0, 0, 0};                                  // position error
-  float ePrev[] = {0, 0, 0, 0};                             // previous position error
-  float dedt[] = {0, 0, 0, 0};                              // rate of change of position error (de/dt)
-  float eIntegral[] = {0, 0, 0, 0};                         // integral of error 
-  float u[] = {0, 0, 0, 0};                                 // PID control signal
-  int pwm[] = {0, 0, 0, 0};                                 // motor speed(s), represented in bit resolution
-  int dir[] = {1, 1, 1, 1};                                 // direction that motor should turn
+  long pos[] = {0, 0};                                // current motor positions
+  float velEncoder[] = {0, 0};                        // motor velocity in counts/sec
+  float velMotor[] = {0, 0};                          // motor shaft velocity in rpm
+  float posChange[] = {0, 0};                         // change in position for set speed
+  long e[] = {0, 0};                                  // position error
+  float ePrev[] = {0, 0};                             // previous position error
+  float dedt[] = {0, 0};                              // rate of change of position error (de/dt)
+  float eIntegral[] = {0, 0};                         // integral of error 
+  float u[] = {0, 0};                                 // PID control signal
+  int pwm[] = {0, 0};                                 // motor speed(s), represented in bit resolution
+  int dir[] = {1, 1};                                 // direction that motor should turn
   uint16_t r, g, b, c;                                // RGBC values from TCS34725
 
   
@@ -197,11 +203,15 @@ void loop() {
     }
     printf("%d, %d, %d, %d, %d\n", r,g,b,driveData.detected);
   
+  
   unsigned long curTime = micros();                   // capture current time in microseconds
   if (curTime - lastTime > 10000) {                   // wait ~10 ms
     deltaT = ((float) (curTime - lastTime)) / 1.0e6;  // compute actual time interval in seconds
     lastTime = curTime;                               // update start time for next control cycle
     driveData.time = curTime;                         // update transmission time
+
+    analogWrite(diskIN1, 200);
+    digitalWrite(diskIN2, LOW);
 
     for (int k = 0; k < cNumMotors; k++) {
       velEncoder[k] = ((float) pos[k] - (float) lastEncoder[k]) / deltaT; // calculate velocity in counts/sec
@@ -240,12 +250,8 @@ void loop() {
           target[k] = (long) -targetF[k];               // motor 2 spins in opposite direction
         }
       }
-
-      if (k == 2 || k == 3) {
-        posChange[k] = (float) (1 * 13);              // motors 3 and 4 running at a constant speed
-        targetF[k] = targetF[k] + posChange[k];         // set new target position
-        target[k] = (long) targetF[k];                // motor 1 spins one way
-      }
+      
+      
 
       // use PID to calculate control signal to motor
       e[k] = target[k] - pos[k];                      // position error
@@ -266,13 +272,13 @@ void loop() {
         u[k] = cMaxSpeedInCounts;                     // impose upper limit
       }
       pwm[k] = map(u[k], 0, cMaxSpeedInCounts, cMinPWM, cMaxPWM); // convert control signal to pwm
+      
       if (commsLossCount < cMaxDroppedPackets / 4) {
         setMotor(dir[k], pwm[k], cIN1Chan[k], cIN2Chan[k]); // update motor speed and direction
       }
       else {
         setMotor(0, 0, cIN1Chan[k], cIN2Chan[k]);     // stop motor
       }
-      setMotor(dir[k], pwm[k], cIN1Chan[k], cIN2Chan[k]);
 #ifdef SERIAL_STUDIO
       if (k == 0) {
         printf("/*");                                 // start of sequence for Serial Studio parsing
