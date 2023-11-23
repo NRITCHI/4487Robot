@@ -66,8 +66,8 @@ const float kp = 1.5;                                 // proportional gain for P
 const float ki = 0.2;                                 // integral gain for PID
 const float kd = 0.8;                                 // derivative gain for PID
 const int cTCSLED = 23;                               // GPIO pin for LED on TCS34725
-const int ci_ServoPin1 = 13;                          // GPIO pin for servo 1
-const int ci_ServoPin2 = 36;                          // GPIO pin for servo 2
+const int ci_ServoPin1 = 3;                          // GPIO pin for servo 1
+const int ci_ServoPin2 = 1;                          // GPIO pin for servo 2
 const int ci_ServoChannel1 = 8;                       // PWM channel for servo motor
 const int ci_ServoChannel2 = 9;                       // PWM channel for servo motor 2
 
