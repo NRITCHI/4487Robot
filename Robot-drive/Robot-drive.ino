@@ -46,7 +46,7 @@ struct Encoder {
 
 // Constants
 const int cHeartbeatLED = 2;                          // GPIO pin of built-in LED for heartbeat
-const int cStatusLED = 27;                            // GPIO pin of communication status LED
+///const int cStatusLED = 27;                            // GPIO pin of communication status LED
 const int cHeartbeatInterval = 500;                   // heartbeat blink interval, in milliseconds
 const int cNumMotors = 4;                             // Number of DC motors
 const int cIN1Pin[] = {17, 19, 4, 2};                       // GPIO pin(s) for INT1
@@ -72,8 +72,8 @@ unsigned long lastTime = 0;                           // last time of motor cont
 unsigned int commsLossCount = 0;                      // number of sequential sent packets have dropped
 Encoder encoder[] = {{25, 26, 0},                     // encoder 0 on GPIO 25 and 26, 0 position
                      {32, 33, 0},
-                     {34, 35, 0},
-                     {14, 12, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
+                     {14, 12, 0},
+                     {27, 13, 0}};                    // encoder 1 on GPIO 32 and 33, 0 position
 long target[] = {0, 0, 0, 0};                               // target encoder count for motor
 long lastEncoder[] = {0, 0, 0, 0};                          // encoder count at last control cycle
 float targetF[] = {0.0, 0.0, 0.0, 0.0};                         // target for motor as float
@@ -96,7 +96,7 @@ void setup() {
   WiFi.disconnect();                                  // disconnect from network
   
   pinMode(cHeartbeatLED, OUTPUT);                     // configure built-in LED for heartbeat
-  pinMode(cStatusLED, OUTPUT);                        // configure GPIO for communication status LED as output
+  //pinMode(cStatusLED, OUTPUT);                        // configure GPIO for communication status LED as output
   pinMode(cTCSLED, OUTPUT);                           // configure GPIO for control of LED on TCS34725
 
  
@@ -173,10 +173,10 @@ void loop() {
 
   
   // if too many sequential packets have dropped, assume loss of controller, restart as safety measure
-   if (commsLossCount > cMaxDroppedPackets) {
-    delay(1000);                                      // okay to block here as nothing else should be happening
-    ESP.restart();                                    // restart ESP32
-  }
+  // if (commsLossCount > cMaxDroppedPackets) {
+    //delay(1000);                                      // okay to block here as nothing else should be happening
+    //ESP.restart();                                    // restart ESP32
+  //}
 
   // store encoder positions to avoid conflicts with ISR updates
   noInterrupts();                                     // disable interrupts temporarily while reading
@@ -240,9 +240,11 @@ void loop() {
           target[k] = (long) -targetF[k];               // motor 2 spins in opposite direction
         }
       }
+      Serial.println(k);
 
       if (k == 2 || k == 3) {
-        posChange[k] = (float) (1 * 10);              // motors 3 and 4 running at a constant speed
+        Serial.println("entered");
+        posChange[k] = (float) (1 * 13);              // motors 3 and 4 running at a constant speed
         targetF[k] = targetF[k] + posChange[k];         // set new target position
         target[k] = (long) targetF[k];                // motor 1 spins one way
       }
@@ -288,10 +290,10 @@ void loop() {
     // send data from drive to controller
     esp_err_t result = esp_now_send(receiverMacAddress, (uint8_t *) &driveData, sizeof(driveData)); 
     if (result == ESP_OK) {                           // if sent successfully
-      digitalWrite(cStatusLED, 0);                    // turn off communucation status LED
+      //digitalWrite(cStatusLED, 0);                    // turn off communucation status LED
     }
     else {                                            // otherwise
-      digitalWrite(cStatusLED, 1);                    // turn on communication status LED
+      //digitalWrite(cStatusLED, 1);                    // turn on communication status LED
     }
   }
   doHeartbeat();                                      // update heartbeat LED
@@ -356,7 +358,7 @@ void onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.printf("Last packet send status: %s\n", status == ESP_NOW_SEND_SUCCESS ? "Message sent" : "Message failed");
 #endif
   if (status != ESP_NOW_SEND_SUCCESS) {
-    digitalWrite(cStatusLED, 1);                      // turn on communication status LED
+    //digitalWrite(cStatusLED, 1);                      // turn on communication status LED
     commsLossCount++;                                 // increase lost packet count
   }
   else {
