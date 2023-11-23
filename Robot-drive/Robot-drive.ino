@@ -214,7 +214,14 @@ void loop() {
     } else{
       driveData.detected = false;
     }
-    printf("%d, %d, %d, %d, %d\n", r,g,b,driveData.detected);
+
+
+  if (r >= 10 && g >= 40 && b >= 10 && c >= 20){
+      driveData.detected = true;
+  } else{
+    driveData.detected = false;
+  }
+  
   
   
   unsigned long curTime = micros();                   // capture current time in microseconds
