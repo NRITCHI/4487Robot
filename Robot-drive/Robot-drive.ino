@@ -71,9 +71,9 @@ const int diskIN2 = 27;
 //const int fanIN1 = 4;
 //const int fanIN2 = 13;
 const int ci_ServoPin1 = 4;                          // GPIO pin for servo 1
-const int ci_ServoPin2 = 1;                          // GPIO pin for servo 2
-const int ci_ServoChannel1 = 8;                       // PWM channel for servo motor
-const int ci_ServoChannel2 = 9;                       // PWM channel for servo motor 2
+//const int ci_ServoPin2 = 1;                          // GPIO pin for servo 2
+const int ci_ServoChannel1 = 4;                       // PWM channel for servo motor
+//const int ci_ServoChannel2 = 5;                       // PWM channel for servo motor 2
 
 
 // Variables
@@ -107,7 +107,11 @@ void setup() {
   //pinMode(cStatusLED, OUTPUT);                        // configure GPIO for communication status LED as output
   pinMode(cTCSLED, OUTPUT);                           // configure GPIO for control of LED on TCS34725
 
- 
+  ledcAttachPin(ci_ServoPin1, ci_ServoChannel1);        // assign servo pin to servo channel
+  //ledcAttachPin(ci_ServoPin2, ci_ServoChannel2);        // assign servo pin to servo channel
+  ledcSetup(ci_ServoChannel1, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+  //ledcSetup(ci_ServoChannel2, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+
   // setup motors with encoders
   for (int k = 0; k < cNumMotors; k++) {
     ledcAttachPin(cIN1Pin[k], cIN1Chan[k]);           // attach INT1 GPIO to PWM channel
@@ -123,10 +127,7 @@ void setup() {
   pinMode(diskIN1, OUTPUT);
   pinMode(diskIN2, OUTPUT);
 
-  ledcAttachPin(ci_ServoPin1, ci_ServoChannel1);        // assign servo pin to servo channel
-  ledcAttachPin(ci_ServoPin2, ci_ServoChannel2);        // assign servo pin to servo channel
-  ledcSetup(ci_ServoChannel1, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
-  ledcSetup(ci_ServoChannel2, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+  
   
 
   // Initialize ESP-NOW
