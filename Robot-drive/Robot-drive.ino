@@ -129,7 +129,7 @@ void setup() {
   }
 
   pinMode(diskIN1, OUTPUT);
-  pinMode(diskIN2, OUTPUT);
+  pinMode(diskIN2, OUTPUT); 
 
   
   
