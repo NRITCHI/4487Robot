@@ -91,6 +91,7 @@ DriveDataPacket driveData;                            // data packet to send con
 int curCheck;
 int prevCheck;
 int position = 0;
+int senseDelay;
 
 // REPLACE WITH MAC ADDRESS OF YOUR CONTROLLER ESP32
 uint8_t receiverMacAddress[] = {0x78,0xE3,0x6D,0x65,0x32,0x6C};  // MAC address of controller 00:01:02:03:04:05 
@@ -229,45 +230,59 @@ void loop() {
   Serial.println(c);
 
   Serial.println(position);
-  if (position == 4) {                                                    // if position 4 (item discharged)
-    if ((millis() - curCheck) > 500 && (millis() - curCheck) < 1000) {    // wait in position for 500 millisecond      
-      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(87));                                    // go to home position
-    } else if ((millis() - curCheck) > 1000) {                             // after another 500 milliseconds
-      position = 0;                                                        // return back to 0 (looking for colour)
-      curCheck = millis();                                                 // reset
-    }
-  }
+  
   // changes servo position depending on colour
   
   if (position == 0) {                                          // if in position 0 (at home position, looking for colour)
-    if (r <= 3 && b <= 5 && g <= 5 && c <= 10) {                    // check if black
+    if (r <= 14 && b <= 10 && g <= 10 && c <= 25) {                    // check if black
       Serial.println("black");
-    } else if (r <= 3 && b <= 5 && g <= 5 && c <= 10) {            // check if blue
-      position = 1;                                             // change to position 1
-      curCheck = millis();                                      // update timer
-      Serial.println("blue");
-    } else {
-      position = 2;                                               // check if white
-      curCheck = millis();
-      Serial.println("white");                                   //change position
+      senseDelay = millis();
+    }else{
+      if ((millis() - senseDelay) > 200){
+        if (r <= 32 && r >= 16 && b <= 29 && b >= 11  && g <= 36 && g >= 12 && c <= 500 && c >= 40) {            // check if green
+          Serial.println("green");
+          curCheck = millis();                                      // update timer
+          position = 1;                                             // change to position 1
+        }else {
+          curCheck = millis();
+          Serial.println("white");                                   //change position
+          position = 2;                                               // check if white
+        }
+      }
     }
   }
+
+    
   
   if (position == 0) {
-    ledcWrite(ci_ServoChannel1, degreesToDutyCycle(87));               // keep at home position if did not detect colour
+    ledcWrite(ci_ServoChannel1, degreesToDutyCycle(95));               // keep at home position if did not detect colour
   } else if (position == 1) {                                          
-    if ((millis() - curCheck) > 1000) {                             // if position 1 and after delay, change position
+    //if ((millis() - curCheck) > 1000) {                             // if position 1 and after delay, change position
       ledcWrite(ci_ServoChannel1, degreesToDutyCycle(0));
       position = 4;                                                  // change to position 4 (waiting position)
       curCheck = millis();                                                 // reset
-    }
+    //}
   } else if (position == 2) {
-    if ((millis() - curCheck) > 1000) {                                 // if position 2 and after delay, change position
+    //if ((millis() - curCheck) > 400) {                                 // if position 2 and after delay, change position
+      //if(r <= 3 && b <= 5 && g <= 5 && c <= 1)
       ledcWrite(ci_ServoChannel1, degreesToDutyCycle(150));                 // change to proper position
       position = 4;                                                       // change to position 4 (waiting position)
       curCheck = millis();                                                      // reset
-    }
+   // }
     
+  }
+
+  if (position == 4) {                                                    // if position 4 (item discharged)
+    if ((millis() - curCheck) > 200 && (millis() - curCheck) < 1000) {    // wait in position for 500 millisecond      
+      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(95));                                    // go to home position
+      //position = 0;                                                        // return back to 0 (looking for colour)
+
+    } else if ((millis() - curCheck) >= 1000) {                             // after another 500 milliseconds
+      position = 0;                                                        // return back to 0 (looking for colour)
+      curCheck = millis();                                                 // reset
+      Serial.println("We are here");
+
+    }
   }
   
   
@@ -278,7 +293,7 @@ void loop() {
     lastTime = curTime;                               // update start time for next control cycle
     driveData.time = curTime;                         // update transmission time
 
-    analogWrite(diskIN1, 220);
+    analogWrite(diskIN1, 170);
     digitalWrite(diskIN2, LOW);
 
     for (int k = 0; k < cNumMotors; k++) {
