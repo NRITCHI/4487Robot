@@ -222,10 +222,10 @@ void loop() {
 
   Serial.print("r ");
   Serial.print(r);
-  Serial.print(" g ");
-  Serial.print(g);
   Serial.print(" b ");
   Serial.print(b);
+  Serial.print(" g ");
+  Serial.print(g);
   Serial.print(" c ");
   Serial.println(c);
 
@@ -234,18 +234,23 @@ void loop() {
   // changes servo position depending on colour
   
   if (position == 0) {                                          // if in position 0 (at home position, looking for colour)
-    if (r <= 14 && b <= 10 && g <= 10 && c <= 25) {                    // check if black
+    if (r <= 13 && b <= 10 && g <= 10 && c <= 25) {                    // check if black
       Serial.println("black");
       senseDelay = millis();
     }else{
-      if ((millis() - senseDelay) > 200){
-        if (r <= 32 && r >= 16 && b <= 29 && b >= 11  && g <= 36 && g >= 12 && c <= 500 && c >= 40) {            // check if green
-          Serial.println("green");
+      if ((millis() - senseDelay) > 300){
+        //if (r <= 30 && r >= 25 && b <= 25 && b >= 20  && g <= 38 && g >= 29 && c <= 92 && c >= 75) {            // check if green
+        if (r <= 34 && r >= 25 && b <= 30 && b >= 20  && g <= 42 && g >= 29 && c <= 105 && c >= 75) {             // check green upright
+          Serial.println("green upright");
           curCheck = millis();                                      // update timer
           position = 1;                                             // change to position 1
+        //} else if (r <= 45 && r >= 14 && b <= 42 && b >= 11  && g <= 52 && g >= 18 && c <= 137 && c >= 44) {             // check green upside down
+          //Serial.println("green upside down");
+          //curCheck = millis();                                      // update timer
+          //position = 1;                                             // change to position 1
         }else {
           curCheck = millis();
-          Serial.println("white");                                   //change position
+          Serial.println("reject");                                   //change position
           position = 2;                                               // check if white
         }
       }
@@ -265,7 +270,7 @@ void loop() {
   } else if (position == 2) {
     //if ((millis() - curCheck) > 400) {                                 // if position 2 and after delay, change position
       //if(r <= 3 && b <= 5 && g <= 5 && c <= 1)
-      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(150));                 // change to proper position
+      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(180));                 // change to proper position
       position = 4;                                                       // change to position 4 (waiting position)
       curCheck = millis();                                                      // reset
    // }
@@ -293,7 +298,7 @@ void loop() {
     lastTime = curTime;                               // update start time for next control cycle
     driveData.time = curTime;                         // update transmission time
 
-    analogWrite(diskIN1, 170);
+    analogWrite(diskIN1, 100);
     digitalWrite(diskIN2, LOW);
 
     for (int k = 0; k < cNumMotors; k++) {
