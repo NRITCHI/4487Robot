@@ -71,9 +71,9 @@ const int diskIN2 = 27;
 //const int fanIN1 = 4;
 //const int fanIN2 = 13;
 const int ci_ServoPin1 = 4;                          // GPIO pin for servo 1
-//const int ci_ServoPin2 = 1;                          // GPIO pin for servo 2
+const int ci_Bucket = 12;                             // GPIO pin for servo 2
 const int ci_ServoChannel1 = 4;                       // PWM channel for servo motor
-//const int ci_ServoChannel2 = 5;                       // PWM channel for servo motor 2
+const int ci_BucketChannel = 5;                       // PWM channel for servo motor 2
 
 
 // Variables
@@ -92,6 +92,8 @@ int curCheck;
 int prevCheck;
 int position = 0;
 int senseDelay;
+
+int test = 0;
 
 // REPLACE WITH MAC ADDRESS OF YOUR CONTROLLER ESP32
 uint8_t receiverMacAddress[] = {0x78,0xE3,0x6D,0x65,0x32,0x6C};  // MAC address of controller 00:01:02:03:04:05 
@@ -113,9 +115,9 @@ void setup() {
   pinMode(cTCSLED, OUTPUT);                           // configure GPIO for control of LED on TCS34725
 
   ledcAttachPin(ci_ServoPin1, ci_ServoChannel1);        // assign servo pin to servo channel
-  //ledcAttachPin(ci_ServoPin2, ci_ServoChannel2);        // assign servo pin to servo channel
+  ledcAttachPin(ci_Bucket, ci_BucketChannel);        // assign servo pin to servo channel
   ledcSetup(ci_ServoChannel1, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
-  //ledcSetup(ci_ServoChannel2, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
+  ledcSetup(ci_BucketChannel, 50, 16);                // setup for channel for 50 Hz, 16-bit resolution
 
   // setup motors with encoders
   for (int k = 0; k < cNumMotors; k++) {
@@ -290,8 +292,22 @@ void loop() {
     }
   }
   
+  // bucket code
+  /*
+  if (inData.bucket == 1) {
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));
+  }
+  */
+
+  if (test == 0) {
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));
+    test = 1;
+  } else {
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));
+    test = 0;
+  }
   
-  
+  // control code
   unsigned long curTime = micros();                   // capture current time in microseconds
   if (curTime - lastTime > 10000) {                   // wait ~10 ms
     deltaT = ((float) (curTime - lastTime)) / 1.0e6;  // compute actual time interval in seconds
