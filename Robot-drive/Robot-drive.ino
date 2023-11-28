@@ -27,9 +27,9 @@ long degreesToDutyCycle(int deg);
 // Control data packet structure
 struct ControlDataPacket {
   int dir;                                            // drive direction: 1 = forward, -1 = reverse, 0 = stop
-  int bucket;                                         // 1 to dump bucket
-  int sorting;                                        // 1 to turn on sorting, 0 off
   int speed;                                          // motor speed
+  int sorting;                                        // 1 to turn on sorting, 0 off
+  int bucket;                                         // 1 to dump bucket
   unsigned long time;                                 // time packet sent
   int turn;                                           // motor direction (1 = right turn, 0 = straight, -1 = left turn)
 };
@@ -102,7 +102,7 @@ int dumping = 0;
 int test = 0;
 
 // REPLACE WITH MAC ADDRESS OF YOUR CONTROLLER ESP32
-uint8_t receiverMacAddress[] = {0x78,0xE3,0x6D,0x65,0x32,0x6C};  // MAC address of controller 00:01:02:03:04:05 
+uint8_t receiverMacAddress[] = {0xB0,0xA7,0x32,0xF2,0x92,0xD4};  // MAC address of controller 00:01:02:03:04:05 
 esp_now_peer_info_t peerInfo = {};                    // ESP-NOW peer information
 
 // TCS34725 colour sensor with 2.4 ms integration time and gain of 4
@@ -139,7 +139,7 @@ void setup() {
 
   pinMode(diskIN1, OUTPUT);
   pinMode(diskIN2, OUTPUT); 
-
+  ledcWrite(ci_BucketChannel, degreesToDutyCycle(130));
   
   
 
@@ -311,12 +311,12 @@ void loop() {
   }                                                             // toggle start of dump
  
   if (dumping == 1 && (millis() - dumpDelay) > 1000){             // if is starting, wait half a second for anything to finish
-    ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));         // rotate bucket
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(0));         // rotate bucket
     dumpWait = millis();                                         // start timer
     dumping = 2;                                                 // continue dump process
   } else if (dumping == 2 && (millis() - dumpWait) > 1000) {     // after time and is in second phase
     dumping = 0;                                                  // dump back to normal
-    ledcWrite(ci_BucketChannel, degreesToDutyCycle(0));           // return to original position
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(130));           // return to original position
   }
   
   /*
