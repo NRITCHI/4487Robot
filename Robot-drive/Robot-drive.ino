@@ -27,6 +27,8 @@ long degreesToDutyCycle(int deg);
 // Control data packet structure
 struct ControlDataPacket {
   int dir;                                            // drive direction: 1 = forward, -1 = reverse, 0 = stop
+  int bucket;                                         // 1 to dump bucket
+  int sorting;                                        // 1 to turn on sorting, 0 off
   int speed;                                          // motor speed
   unsigned long time;                                 // time packet sent
   int turn;                                           // motor direction (1 = right turn, 0 = straight, -1 = left turn)
@@ -88,10 +90,14 @@ float targetF[] = {0.0, 0.0};                         // target for motor as flo
 ControlDataPacket inData;                             // control data packet from controller
 DriveDataPacket driveData;                            // data packet to send controller
 
+int toggle = 0;
 int curCheck;
-int prevCheck;
+int dumpDelay = millis();
+int dumpWait;
 int position = 0;
 int senseDelay;
+int pressed = 1;
+int dumping = 0;
 
 int test = 0;
 
@@ -293,12 +299,25 @@ void loop() {
   }
   
   // bucket code
-  /*
-  if (inData.bucket == 1) {
-    ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));
+  
+  if (inData.bucket == 1 && toggle == 1 && dumping == 0) {  // if is not currently dumping and sorting system is running
+    toggle = -1;                                               // turn sorting system off
+    dumpDelay = millis();                                     // start timer for safety
+    dumping = 1;                                             // toggle start of dump
+  } else if (inData.bucket == 1 && toggle == 0 && dumping == 0) {    // if sorting isnt running
+    dumping = 1;
+  }                                                             // toggle start of dump
+ 
+  if (dumping == 1 && (millis() - dumpDelay) > 1000){             // if is starting, wait half a second for anything to finish
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));         // rotate bucket
+    dumpWait = millis();                                         // start timer
+    dumping = 2;                                                 // continue dump process
+  } else if (dumping == 2 && (millis() - dumpWait) > 1000)) {     // after time and is in second phase
+    dumping = 0;                                                  // dump back to normal
+    ledcWrite(ci_BucketChannel, degreesToDutyCycle(0));           // return to original position
   }
-  */
-
+  
+  /*
   if (test == 0) {
     ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));
     test = 1;
@@ -306,7 +325,7 @@ void loop() {
     ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));
     test = 0;
   }
-  
+  */
   // control code
   unsigned long curTime = micros();                   // capture current time in microseconds
   if (curTime - lastTime > 10000) {                   // wait ~10 ms
@@ -314,8 +333,25 @@ void loop() {
     lastTime = curTime;                               // update start time for next control cycle
     driveData.time = curTime;                         // update transmission time
 
-    analogWrite(diskIN1, 100);
-    digitalWrite(diskIN2, LOW);
+
+    // sorting drive logic
+
+    if (conrolData.sorting == 1 && pressed == 0) {           // if button pressed and is not currently pressed
+      toggle = toggle * -1;                                // swap toggle state
+      pressed = 1;                                         // button state as pressed
+    } else if (conrolData.sorting == 0) {                    // if is not pressed
+      pressed = 0;                                         // set state as not pressed
+    }
+ 
+
+    if (toggle == 1) {
+      analogWrite(diskIN1, 100);
+      digitalWrite(diskIN2, LOW);                    // if on go, if off stop the sorting system
+    } else if (toggle == -1) {
+      digitalWrite(diskIN1, LOW);
+      digitalWrite(diskIN2, LOW);
+    }
+    
 
     for (int k = 0; k < cNumMotors; k++) {
       velEncoder[k] = ((float) pos[k] - (float) lastEncoder[k]) / deltaT; // calculate velocity in counts/sec

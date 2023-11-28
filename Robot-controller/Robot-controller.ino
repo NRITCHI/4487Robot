@@ -63,7 +63,7 @@ Button buttonRev = {12, 0, 0, false, true, true};     // reverse, NO pushbutton 
 Button buttonLeft = {27, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
 Button buttonRight = {13, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
 Button buttonBucket = {33, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
-
+Button buttonSorting = {34, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
 
 // REPLACE WITH MAC ADDRESS OF YOUR DRIVE ESP32
 uint8_t receiverMacAddress[] = {0xA8,0x42,0xE3,0xCA,0x77,0x58};  // MAC address of drive 00:01:02:03:04:05 
@@ -91,8 +91,12 @@ void setup() {
   pinMode(buttonRight.pin, INPUT_PULLUP);               
   attachInterruptArg(buttonRight.pin, buttonISR, &buttonRight, CHANGE);
 
+  pinMode(buttonSorting.pin, INPUT_PULLUP);               
+  attachInterruptArg(buttonSorting.pin, buttonISR, &buttonSorting, CHANGE);
+
   pinMode(buttonBucket.pin, INPUT_PULLUP);               
   attachInterruptArg(buttonBucket.pin, buttonISR, &buttonBucket, CHANGE);
+
   pinMode(cDetectedPin, OUTPUT);
 
   // Initialize ESP-NOW
@@ -163,6 +167,14 @@ void loop() {
     }
     else {                                            // no input, stop
       controlData.bucket = 0;
+    }
+
+    // sorting
+    if (!buttonSorting.state) {                           // sorting started or stopped if pressed
+      controlData.sorting = 1;
+    }
+    else {                                                // no input
+      controlData.sorting = 0;
     }
 
     // if drive appears disconnected, update control signal to stop before sending
