@@ -4,7 +4,7 @@
 //  Language: Arduino (C++)
 //  Target:   ESP32
 //  Author:   Blake Nielsen, Nathan Ritchie, Peter Guatto, Hamza Faish
-//  Date:     2023 10 08 
+//  Date:     2023 11 27 
 //
 
  #define PRINT_SEND_STATUS                             // uncomment to turn on output packet send status
@@ -34,6 +34,7 @@ struct Button {
 struct ControlDataPacket {
   int dir;                                            // drive direction: 1 = forward, -1 = reverse, 0 = stop
   int speed;                                          //motor speed
+  int sorting;
   int bucket;                                         // 1 = dump bucket
   unsigned long time;                                 // time packet sent
   int turn;                                           // turn direction: 1 = right, -1 = left, 0 = straight
@@ -62,8 +63,8 @@ Button buttonFwd = {14, 0, 0, false, true, true};     // forward, NO pushbutton 
 Button buttonRev = {12, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
 Button buttonLeft = {27, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
 Button buttonRight = {13, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
-Button buttonBucket = {33, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
-Button buttonSorting = {34, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
+Button buttonBucket = {17, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
+Button buttonSorting = {16, 0, 0, false, true, true};     // reverse, NO pushbutton on GPIO 12, low state when pressed
 
 // REPLACE WITH MAC ADDRESS OF YOUR DRIVE ESP32
 uint8_t receiverMacAddress[] = {0xA8,0x42,0xE3,0xCA,0x77,0x58};  // MAC address of drive 00:01:02:03:04:05 
@@ -168,6 +169,7 @@ void loop() {
     else {                                            // no input, stop
       controlData.bucket = 0;
     }
+    Serial.println(controlData.bucket);
 
     // sorting
     if (!buttonSorting.state) {                           // sorting started or stopped if pressed
