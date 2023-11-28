@@ -9,7 +9,7 @@
 
 // #define SERIAL_STUDIO                                 // print formatted string, that can be captured and parsed by Serial-Studio
 // #define PRINT_SEND_STATUS                             // uncomment to turn on output packet send status
- //#define PRINT_INCOMING                                // uncomment to turn on output of incoming data
+#define PRINT_INCOMING                                // uncomment to turn on output of incoming data
 
 #include <Arduino.h>
 #include <esp_now.h>
@@ -227,7 +227,8 @@ void loop() {
     } else{
       driveData.detected = false;
     }
-
+  
+  /*
   Serial.print("r ");
   Serial.print(r);
   Serial.print(" b ");
@@ -238,12 +239,13 @@ void loop() {
   Serial.println(c);
 
   Serial.println(position);
-  
+  */
+
   // changes servo position depending on colour
   
   if (position == 0) {                                          // if in position 0 (at home position, looking for colour)
     if (r <= 13 && b <= 10 && g <= 10 && c <= 25) {                    // check if black
-      Serial.println("black");
+      //Serial.println("black");
       senseDelay = millis();
     }else{
       if ((millis() - senseDelay) > 300){
@@ -312,7 +314,7 @@ void loop() {
     ledcWrite(ci_BucketChannel, degreesToDutyCycle(95));         // rotate bucket
     dumpWait = millis();                                         // start timer
     dumping = 2;                                                 // continue dump process
-  } else if (dumping == 2 && (millis() - dumpWait) > 1000)) {     // after time and is in second phase
+  } else if (dumping == 2 && (millis() - dumpWait) > 1000) {     // after time and is in second phase
     dumping = 0;                                                  // dump back to normal
     ledcWrite(ci_BucketChannel, degreesToDutyCycle(0));           // return to original position
   }
@@ -336,10 +338,10 @@ void loop() {
 
     // sorting drive logic
 
-    if (conrolData.sorting == 1 && pressed == 0) {           // if button pressed and is not currently pressed
+    if (inData.sorting == 1 && pressed == 0) {           // if button pressed and is not currently pressed
       toggle = toggle * -1;                                // swap toggle state
       pressed = 1;                                         // button state as pressed
-    } else if (conrolData.sorting == 0) {                    // if is not pressed
+    } else if (inData.sorting == 0) {                    // if is not pressed
       pressed = 0;                                         // set state as not pressed
     }
  
@@ -493,7 +495,7 @@ void onDataRecv(const uint8_t *mac_addr, const uint8_t *incomingData, int len) {
   }
   memcpy(&inData, incomingData, sizeof(inData));      // store drive data from controller
 #ifdef PRINT_INCOMING
-  Serial.printf("%d, %d\n", inData.dir, inData.time);
+  Serial.printf("%d, %d, %d, %d\n", inData.dir, inData.sorting, inData.bucket, inData.time);
 #endif
 }
 
