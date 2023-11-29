@@ -90,7 +90,7 @@ float targetF[] = {0.0, 0.0};                         // target for motor as flo
 ControlDataPacket inData;                             // control data packet from controller
 DriveDataPacket driveData;                            // data packet to send controller
 
-int toggle = 0;
+int toggle = 1;
 int curCheck;
 int dumpDelay = millis();
 int dumpWait;
