@@ -288,11 +288,11 @@ void loop() {
   }
 
   if (position == 4) {                                                    // if position 4 (item discharged)
-    if ((millis() - curCheck) > 200 && (millis() - curCheck) < 1000) {    // wait in position for 500 millisecond      
+    if ((millis() - curCheck) > 130 && (millis() - curCheck) < 400) {    // wait in position for 500 millisecond      
       ledcWrite(ci_ServoChannel1, degreesToDutyCycle(95));                                    // go to home position
       //position = 0;                                                        // return back to 0 (looking for colour)
 
-    } else if ((millis() - curCheck) >= 1000) {                             // after another 500 milliseconds
+    } else if ((millis() - curCheck) >= 400) {                             // after another 500 milliseconds
       position = 0;                                                        // return back to 0 (looking for colour)
       curCheck = millis();                                                 // reset
       Serial.println("We are here");
@@ -347,7 +347,7 @@ void loop() {
  
 
     if (toggle == 1) {
-      analogWrite(diskIN1, 100);
+      analogWrite(diskIN1, 78);
       digitalWrite(diskIN2, LOW);                    // if on go, if off stop the sorting system
     } else if (toggle == -1) {
       digitalWrite(diskIN1, LOW);
