@@ -250,9 +250,15 @@ void loop() {
     }else{
       if ((millis() - senseDelay) > 300){
         //if (r <= 30 && r >= 25 && b <= 25 && b >= 20  && g <= 38 && g >= 29 && c <= 92 && c >= 75) {            // check if green
+<<<<<<< Updated upstream
         //if (r <= 32 && r >= 12 && b <= 25 && b >= 8  && g <= 37 && g >= 12 && c <= 90 && c >= 33) {             // check green upright
         //if ((g - b > 3) && (r/g < 1.5) && (g/b > 1.25)){
         if (r >= 12.52 && r <= 24.56 && b >= 6.95 && b <= 19.98 && g >= 11.10 && g <= 28.59 && c >= 31.44 && c <= 72.25) {
+=======
+        //if (r <= 34 && r >= 25 && b <= 30 && b >= 20  && g <= 42 && g >= 29 && c <= 105 && c >= 75) {             // check green upright
+        if (r <= 32 && r >= 12 && b <= 25 && b >= 8  && g <= 37 && g >= 12 && c <= 90 && c >= 33) {             // check green upright
+          Serial.println("green upright");
+>>>>>>> Stashed changes
           curCheck = millis();                                      // update timer
           Serial.println("green");                                   //change position
           position = 1;                                             // change to position 1
