@@ -228,7 +228,7 @@ void loop() {
       driveData.detected = false;
     }
   
-  /*
+  
   Serial.print("r ");
   Serial.print(r);
   Serial.print(" b ");
@@ -238,8 +238,8 @@ void loop() {
   Serial.print(" c ");
   Serial.println(c);
 
-  Serial.println(position);
-  */
+  //Serial.println(position);
+  
 
   // changes servo position depending on colour
   
@@ -250,9 +250,11 @@ void loop() {
     }else{
       if ((millis() - senseDelay) > 300){
         //if (r <= 30 && r >= 25 && b <= 25 && b >= 20  && g <= 38 && g >= 29 && c <= 92 && c >= 75) {            // check if green
-        if (r <= 34 && r >= 25 && b <= 30 && b >= 20  && g <= 42 && g >= 29 && c <= 105 && c >= 75) {             // check green upright
-          Serial.println("green upright");
+        //if (r <= 32 && r >= 12 && b <= 25 && b >= 8  && g <= 37 && g >= 12 && c <= 90 && c >= 33) {             // check green upright
+        //if ((g - b > 3) && (r/g < 1.5) && (g/b > 1.25)){
+        if (r >= 12.52 && r <= 24.56 && b >= 6.95 && b <= 19.98 && g >= 11.10 && g <= 28.59 && c >= 31.44 && c <= 72.25) {
           curCheck = millis();                                      // update timer
+          Serial.println("green");                                   //change position
           position = 1;                                             // change to position 1
         //} else if (r <= 45 && r >= 14 && b <= 42 && b >= 11  && g <= 52 && g >= 18 && c <= 137 && c >= 44) {             // check green upside down
           //Serial.println("green upside down");
@@ -273,7 +275,7 @@ void loop() {
     ledcWrite(ci_ServoChannel1, degreesToDutyCycle(95));               // keep at home position if did not detect colour
   } else if (position == 1) {                                          
     //if ((millis() - curCheck) > 1000) {                             // if position 1 and after delay, change position
-      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(0));
+      ledcWrite(ci_ServoChannel1, degreesToDutyCycle(30));
       position = 4;                                                  // change to position 4 (waiting position)
       curCheck = millis();                                                 // reset
     //}
@@ -292,7 +294,7 @@ void loop() {
       ledcWrite(ci_ServoChannel1, degreesToDutyCycle(95));                                    // go to home position
       //position = 0;                                                        // return back to 0 (looking for colour)
 
-    } else if ((millis() - curCheck) >= 400) {                             // after another 500 milliseconds
+    } else if ((millis() - curCheck) >= 500) {                             // after another 500 milliseconds
       position = 0;                                                        // return back to 0 (looking for colour)
       curCheck = millis();                                                 // reset
       Serial.println("We are here");
