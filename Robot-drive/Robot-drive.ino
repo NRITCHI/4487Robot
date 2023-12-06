@@ -311,7 +311,6 @@ void loop() {
   // bucket code
   
   if (inData.bucket == 1 && toggle == 1 && dumping == 0) {  // if is not currently dumping and sorting system is running
-    toggle = -1;                                               // turn sorting system off
     dumpDelay = millis();                                     // start timer for safety
     dumping = 1;                                             // toggle start of dump
   } else if (inData.bucket == 1 && toggle == 0 && dumping == 0) {    // if sorting isnt running
@@ -354,14 +353,13 @@ void loop() {
     }
  
 
-    if (toggle == 1) {
+     if (toggle == 1) {
       analogWrite(diskIN1, 78);
-      digitalWrite(diskIN2, LOW);                    // if on go, if off stop the sorting system
+      analogWrite(diskIN2, 0);                    // if on go, if off stop the sorting system
     } else if (toggle == -1) {
-      digitalWrite(diskIN1, LOW);
-      digitalWrite(diskIN2, LOW);
+      analogWrite(diskIN1, 0);
+      analogWrite(diskIN2, 78);
     }
-    
 
     for (int k = 0; k < cNumMotors; k++) {
       velEncoder[k] = ((float) pos[k] - (float) lastEncoder[k]) / deltaT; // calculate velocity in counts/sec
