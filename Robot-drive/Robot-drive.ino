@@ -28,7 +28,7 @@ long degreesToDutyCycle(int deg);
 struct ControlDataPacket {
   int dir;                                            // drive direction: 1 = forward, -1 = reverse, 0 = stop
   int speed;                                          // motor speed
-  int sorting;                                        // 1 to turn on sorting, 0 off
+  int sorting;                                        // 1 to toggle sorting wheel
   int bucket;                                         // 1 to dump bucket
   unsigned long time;                                 // time packet sent
   int turn;                                           // motor direction (1 = right turn, 0 = straight, -1 = left turn)
